@@ -14,6 +14,7 @@ from skimage import measure
 st.title("🧊 Microstructure Image Analyzer")
 st.markdown("Upload an SEM/TEM image or use sample images below.")
 
+
 # Sidebar
 st.sidebar.markdown("### Comparison Mode")
 compare_mode = st.sidebar.checkbox("Enable Comparison Mode")
