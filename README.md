@@ -78,21 +78,6 @@ python train_model.py
 
 ---
 
-## 📦 Dependencies
 
-See `requirements.txt`:
-```
-streamlit==1.31.0
-opencv-python==4.9.0.80
-scikit-image==0.22.0
-scikit-learn==1.4.1.post1
-tensorflow==2.15.0
-matplotlib==3.8.2
-plotly==5.19.0
-numpy==1.26.4
-pandas==2.2.1
-```
-
----
 
 
