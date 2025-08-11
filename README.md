@@ -65,7 +65,7 @@ Go to `http://localhost:8501` in your browser.
 3. **Upload an image** or select a sample image to start the analysis.
 
 ---
-
+ 
 ## 📊 Machine Learning Model
 
 - `train_model.py` contains example code to train a regression model predicting material properties based on grain features.
