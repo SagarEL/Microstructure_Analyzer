@@ -14,7 +14,7 @@ y = np.array([100, 120, 110, 130])  # Example material property (replace with yo
 # Train the model
 model = LinearRegression()
 model.fit(X, y)
-
+ 
 # Save the trained model as model.pkl (this creates a binary file)
 joblib.dump(model, "model.pkl")
 print("Model saved as model.pkl")
