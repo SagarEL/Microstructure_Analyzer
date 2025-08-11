@@ -7,7 +7,7 @@ def analyze_microstructure(labels: np.ndarray) -> (pd.DataFrame, dict):
         labels,
         properties=['area', 'equivalent_diameter',
                     'major_axis_length', 'minor_axis_length', 'orientation']
-    )
+    ) 
     df = pd.DataFrame(props)
     df['aspect_ratio'] = df['major_axis_length'] / df['minor_axis_length']
 
