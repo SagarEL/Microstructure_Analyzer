@@ -50,6 +50,38 @@ def overlay_labels(image, labels):
     overlay = label2rgb(labels, image=gray, bg_label=0, alpha=0.4)
     return (overlay * 255).astype(np.uint8)
 
+def _to_rgb(image):
+    """Convert an OpenCV BGR image to RGB for display in Streamlit.
+    If image is None or not a 3-channel image, return it unchanged.
+    """
+    if image is None:
+        return None
+    try:
+        if image.ndim == 3:
+            return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    except Exception:
+        # In case image has unexpected shape/type, return as-is and let
+        # later checks surface the problem to the user.
+        return image
+    return image
+
+def st_image_safe(*args, **kwargs):
+    """Display an image with Streamlit while supporting older/newer kw names.
+
+    Tries `use_container_width` (newer Streamlit). If that raises a TypeError
+    (unexpected keyword), falls back to `use_column_width` (older Streamlit),
+    and finally calls `st.image` without width kwargs.
+    """
+    try:
+        return st.image(*args, **{**kwargs, **{"use_container_width": True}})
+    except TypeError as e:
+        # Some Streamlit versions use `use_column_width` instead
+        try:
+            return st.image(*args, **{**kwargs, **{"use_column_width": True}})
+        except TypeError:
+            # Last resort: call without width argument
+            return st.image(*args, **kwargs)
+
 def plot_contours_overlay(image, labels):
     # Convert to grayscale if needed
     if image.ndim == 3:
@@ -73,9 +105,16 @@ if compare_mode:
             img1 = cv2.imdecode(data1, cv2.IMREAD_COLOR)
         else:
             img1 = cv2.imread(sample_choice)
+        # Validate reads
+        if img1 is None:
+            st.error("Could not read the first image. It may be corrupted or an unsupported format.")
+            st.stop()
         # Read second image
         data2 = np.asarray(bytearray(uploaded2.read()), dtype=np.uint8)
         img2 = cv2.imdecode(data2, cv2.IMREAD_COLOR)
+        if img2 is None:
+            st.error("Could not read the second image. It may be corrupted or an unsupported format.")
+            st.stop()
         # Async processing
         with st.spinner("Processing both images..."):
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -87,13 +126,13 @@ if compare_mode:
         st.markdown("## Side-by-Side Comparison")
         colA, colB = st.columns(2)
         with colA:
-            st.image(img1, caption="Image 1: Original", use_container_width=True)
-            st.image(overlay_labels(img1, labels1), caption="Image 1: Segmentation Overlay", use_container_width=True)
+            st_image_safe(_to_rgb(img1), caption="Image 1: Original")
+            st_image_safe(overlay_labels(img1, labels1), caption="Image 1: Segmentation Overlay")
             st.dataframe(df1.describe())
             st.metric("Cell Count", f"{stats1['cell_count']:,}")
         with colB:
-            st.image(img2, caption="Image 2: Original", use_container_width=True)
-            st.image(overlay_labels(img2, labels2), caption="Image 2: Segmentation Overlay", use_container_width=True)
+            st_image_safe(_to_rgb(img2), caption="Image 2: Original")
+            st_image_safe(overlay_labels(img2, labels2), caption="Image 2: Segmentation Overlay")
             st.dataframe(df2.describe())
             st.metric("Cell Count", f"{stats2['cell_count']:,}")
         # Show difference
@@ -108,6 +147,9 @@ if uploaded is not None or sample_choice:
             img = cv2.imdecode(data, cv2.IMREAD_COLOR)
         else:
             img = cv2.imread(sample_choice)
+        if img is None:
+            st.error("Could not read the selected image. It may be corrupted or an unsupported format.")
+            st.stop()
         # Async processing
         with st.spinner("Processing image..."):
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -122,9 +164,9 @@ if uploaded is not None or sample_choice:
         with tab1:
             st.markdown("### Input & Segmentation")
             col_img1, col_img2, col_img3 = st.columns(3)
-            col_img1.image(img, caption="Original", use_container_width=True)
-            col_img2.image(proc, caption="Processed", use_container_width=True)
-            col_img3.image(overlay_labels(img, labels), caption="Segmentation Overlay", use_container_width=True)
+            col_img1.image(_to_rgb(img), caption="Original")
+            col_img2.image(_to_rgb(proc), caption="Processed")
+            col_img3.image(overlay_labels(img, labels), caption="Segmentation Overlay")
             st.markdown("### Contour Overlay")
             plot_contours_overlay(img, labels)
 
